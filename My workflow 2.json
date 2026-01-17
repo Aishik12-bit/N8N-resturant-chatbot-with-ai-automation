@@ -1,0 +1,311 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=### ROLE\nYou are a helpful and polite Restaurant AI Assistant. Your goal is to help customers place orders while strictly managing inventory levels using the available tools.\n\n### TOOLS AVAILABLE\n1. \"database\": Use this to READ the current stock/inventory.\n2. \"order list\": Use this to WRITE/APPEND confirmed orders.\n\n### PROCESS LOGIC (Follow this step-by-step)\nWhen a customer requests an item (e.g., \"I want 3 Burgers\"):\n\n**STEP 1: Check Inventory**\n* Call the \"database\" tool to search for the specific item requested.\n\n**STEP 2: Validate Item Existence**\n* **IF** the item is NOT found in the \"database\":\n    * Politely inform the customer that the item is not on the menu.\n    * Do not proceed to order.\n\n**STEP 3: Validate Quantity**\n* **IF** the item exists, compare the user's requested quantity with the 'Quantity' or 'Stock' column in the database.\n* **IF requested quantity > available quantity**:\n    * Response: \"I cannot fulfill that order. We only have [Available Quantity] of [Item Name] left. Please order a smaller amount.\"\n    * Do NOT record the order.\n* **IF requested quantity <= available quantity**:\n    * Proceed to Step 4.\n\n**STEP 4: Validate Customer Name (MANDATORY)**\n* Check if the customer has provided their name in the conversation.\n* **IF Name is MISSING**:\n    * Response: \"Could you please provide your name for the order?\"\n    * **STOP HERE.** Do NOT call the \"order list\" tool yet. Wait for the user to reply with their name.\n* **IF Name is KNOWN**:\n    * Proceed to Step 5.\n\n**STEP 5: Finalize Order (Write to Sheet)**\n* Call the \"order list\" tool to add the order.\n* **DATA TO WRITE:**\n    * **Item Name**: [Name of item]{{ $now }}\n    * **Quantity**: [Amount ordered]\n    * **Customer Name**: [Name provided by user]\n    * **Date**: [Current Date/Time]\n    * **Status**: Write the word **\"Confirmed\"** (Do NOT write the stock number).\n* Response: \"Great! I have placed your order for [Quantity] [Item Name]. Is there anything else you would like?\"\n\n### TONE\n* Keep responses short, clear, and friendly.\n* Always answer in English."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "35a87817-0775-4ff7-bd80-1ac8efd3b3b8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.contacts[0].wa_id }}",
+        "contextWindowLength": 14
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        160
+      ],
+      "id": "a99f3c1c-9bf2-4a50-945c-2bf966303235",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1NSiCRDg6qkLvbwKftfZ29KO-fukS7XOrHpBYGqV2Yo0/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NSiCRDg6qkLvbwKftfZ29KO-fukS7XOrHpBYGqV2Yo0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        160
+      ],
+      "id": "e06fff29-5153-46ab-a949-7531f9101a18",
+      "name": "database",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WZM4KtCIfbialuwz",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1SwGACOqlenzw9ttfnQcQ2BYA1VorYRzWl2lacjyUq_o/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SwGACOqlenzw9ttfnQcQ2BYA1VorYRzWl2lacjyUq_o/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+            "Order": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order', ``, 'string') }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Time": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Time', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order",
+              "displayName": "Order",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        160
+      ],
+      "id": "6434b47c-2b13-4bcc-9b7c-d4ca59eaa510",
+      "name": "order list",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Meyhi3UXUYfN4vpK",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1006283229229261",
+        "recipientPhoneNumber": "+916290334120",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -48
+      ],
+      "id": "10e5ca7f-e25c-440a-bc2f-7deac8444f2f",
+      "name": "Send message",
+      "webhookId": "ede96284-dbf5-4390-b790-9cf500450d74",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "0NS6q8TnrJaHhOPN",
+          "name": "WhatsApp account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -48
+      ],
+      "id": "1de397ce-a765-41b4-aec2-531700e8b797",
+      "name": "Trigger",
+      "webhookId": "5caaee9a-8d63-4fc4-934b-1267582290ed",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "XUqXNfoFz4UMRgBp",
+          "name": "WhatsApp OAuth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        160
+      ],
+      "id": "71c33987-f4d4-412f-bcf9-c89c7d8e44dc",
+      "name": "chat",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VTbxNfKIWu9FI2fp",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "database": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "order list": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2f4d45ce-6d7c-41a9-a2bd-76144cc81723",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "925e273e783b0693e62e19e7d73bcad81c743e09897dde5a30fb6c4ffa810f3b"
+  },
+  "id": "vC0bg-H-gsGI1OQXpC6JU",
+  "tags": []
+}
