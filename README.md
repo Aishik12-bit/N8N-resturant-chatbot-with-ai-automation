@@ -78,7 +78,7 @@ User can continue chatting naturally (2–3+ messages)
 
 ⚙️ Setup Instructions
 1️⃣ Clone the Repository
-git clone https://github.com/your-username/whatsapp-ai-agent-n8n.git
+git clone https://github.com/Aishik12-bit/whatsapp-ai-agent-n8n.git
 
 2️⃣ Import Workflow into n8n
 
